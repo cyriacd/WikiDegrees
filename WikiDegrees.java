@@ -22,16 +22,20 @@ public class WikiDegrees{
               reader.close();
       }
   }
+
+  public static String getMostRelevantTopic(String searchQuery) throws Exception{
+    String json = readUrl("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+URLEncoder.encode(searchQuery, "UTF-8")+"&format=json");
+
+    Gson gson = new Gson();
+    JsonObject rootObj = new JsonParser().parse(json).getAsJsonObject();
+    JsonArray locObj = rootObj.getAsJsonObject("query").getAsJsonArray("search");
+    Type listType = new TypeToken<List<WikipediaSearchResponse>>() {}.getType();
+    return (String)((List<WikipediaSearchResponse>)gson.fromJson(locObj, listType)).get(0).title;
+  }
   public static void main(String[] args) throws Exception {
-      String json = readUrl("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+URLEncoder.encode(args[0], "UTF-8")+"&format=json");
-      System.out.println(args[0]);
-      Gson gson = new Gson();
-      JsonObject rootObj = new JsonParser().parse(json).getAsJsonObject();
-      JsonArray locObj = rootObj.getAsJsonObject("query").getAsJsonArray("search");
-      Type listType = new TypeToken<List<WikipediaSearchResponse>>() {}.getType();
-      List<WikipediaSearchResponse> searchResult = gson.fromJson(locObj, listType);
-      for(WikipediaSearchResponse response : searchResult){
-        System.out.println(response.title);
-      }
+    String startTopic = getMostRelevantTopic(args[0]);
+    String endTopic = getMostRelevantTopic(args[1]);
+    System.out.println("Start Topic: "+startTopic);
+    System.out.println("End Topic: "+endTopic);
   }
 }
