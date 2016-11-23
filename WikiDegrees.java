@@ -1,3 +1,4 @@
+
 import com.google.gson.*;
 import java.util.*;
 import java.io.*;
@@ -5,7 +6,7 @@ import java.net.*;
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
 public class WikiDegrees{
-  private static String readUrl(String urlString) throws Exception {
+  public static String readUrl(String urlString) throws Exception {
       BufferedReader reader = null;
       try {
           URL url = new URL(urlString);
@@ -26,16 +27,22 @@ public class WikiDegrees{
   public static String getMostRelevantTopic(String searchQuery) throws Exception{
     String json = readUrl("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+URLEncoder.encode(searchQuery, "UTF-8")+"&format=json");
 
-    Gson gson = new Gson();
     JsonObject rootObj = new JsonParser().parse(json).getAsJsonObject();
     JsonArray locObj = rootObj.getAsJsonObject("query").getAsJsonArray("search");
     Type listType = new TypeToken<List<WikipediaSearchResponse>>() {}.getType();
-    return (String)((List<WikipediaSearchResponse>)gson.fromJson(locObj, listType)).get(0).title;
+    List<WikipediaSearchResponse> response = new Gson().fromJson(locObj, listType);
+    if(response.size()<1) return null;
+    return response.get(0).title;
   }
   public static void main(String[] args) throws Exception {
     String startTopic = getMostRelevantTopic(args[0]);
     String endTopic = getMostRelevantTopic(args[1]);
-    System.out.println("Start Topic: "+startTopic);
-    System.out.println("End Topic: "+endTopic);
+    if(startTopic==null || endTopic ==null){
+      System.err.println("Unable to find topics!");
+      System.exit(1);
+    }
+    System.out.println("Start Topic: "+startTopic+" End Topic: "+endTopic);
+    new WikiDegreesBFS().findDegreesOfSeparation(startTopic,endTopic);
+
   }
 }
