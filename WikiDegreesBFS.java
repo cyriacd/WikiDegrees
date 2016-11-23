@@ -15,6 +15,7 @@ public class WikiDegreesBFS{
     searchTree = new SearchTree(startTopic, null);
     SearchTree tempSearchTree = searchTree;
     done = new ArrayList<String>();
+    boolean finished =false;
     LinkedList<SearchTree> priorityQueue = new LinkedList<SearchTree>();
     priorityQueue.add(searchTree);
     while(priorityQueue.size()>0){
@@ -24,18 +25,19 @@ public class WikiDegreesBFS{
       }
       done.add(currentTopic.data.replace(" ", ""));
       System.out.println(currentTopic.data);
-      if(currentTopic.data.replace(" ", "").equalsIgnoreCase(endTopic.replace(" ",""))){
-        SearchTree temp = currentTopic;
-        while(temp!=null){
-          System.out.print(temp.data + " <- ");
-          temp = temp.parent;
-        }
-        return true;
-      }
       LinkedList<String> childrenString = getChildrenTopics(currentTopic.data);
-      childrenString.forEach((child) -> {
-          priorityQueue.add(new SearchTree(child, currentTopic));
-      });
+
+      for(String child: childrenString){
+        SearchTree childTreeNode = new SearchTree(child, currentTopic);
+        priorityQueue.add(childTreeNode);
+        if(child.replace(" ", "").equalsIgnoreCase(endTopic.replace(" ",""))){
+          while(childTreeNode!=null){
+            System.out.print(childTreeNode.data + " <- ");
+            childTreeNode = childTreeNode.parent;
+          }
+          return true;
+        }
+      }
     }
     return false;
   }
