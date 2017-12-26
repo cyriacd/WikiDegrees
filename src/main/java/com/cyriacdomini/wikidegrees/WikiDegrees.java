@@ -1,0 +1,52 @@
+package com.cyriacdomini.wikidegrees;
+
+import com.google.gson.*;
+import java.util.*;
+import java.io.*;
+import java.net.*;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+public class WikiDegrees{
+  public static String readUrl(String urlString) throws Exception {
+      BufferedReader reader = null;
+      try {
+          URL url = new URL(urlString);
+          reader = new BufferedReader(new InputStreamReader(url.openStream()));
+          StringBuffer buffer = new StringBuffer();
+          int read;
+          char[] chars = new char[1024];
+          while ((read = reader.read(chars)) != -1)
+              buffer.append(chars, 0, read);
+
+          return buffer.toString();
+      } finally {
+          if (reader != null)
+              reader.close();
+      }
+  }
+
+  public static String getMostRelevantTopic(String searchQuery) throws Exception{
+    System.setProperty("http.proxyHost", "http.proxy.fmr.com");
+    System.setProperty("http.proxyPort", "8000");
+    System.setProperty("https.proxyHost", "http.proxy.fmr.com");
+    System.setProperty("https.proxyPort", "8000");
+
+    String sURL = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+URLEncoder.encode(searchQuery, "UTF-8")+"&format=json";
+    // String json = readUrl(sURL);
+    // System.out.println(sURL);
+    System.setProperty("java.net.useSystemProxies", "true");
+
+    URL url = new URL(sURL);
+    // JsonObject json = 
+    HttpURLConnection request = (HttpURLConnection) url.openConnection();
+    request.connect();
+    JsonParser jp = new JsonParser(); //from gson
+    JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent())); //Convert the input stream to a json element
+    JsonObject rootObj = root.getAsJsonObject(); 
+    JsonArray locObj = rootObj.getAsJsonObject("query").getAsJsonArray("search");
+    Type listType = new TypeToken<List<WikipediaSearchResponse>>() {}.getType();
+    List<WikipediaSearchResponse> response = new Gson().fromJson(locObj, listType);
+    if(response.size()<1) return null;
+    return response.get(0).title;
+  }
+}
